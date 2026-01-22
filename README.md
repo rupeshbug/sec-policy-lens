@@ -1,0 +1,1 @@
+A structure-aware RAG system for analyzing and comparing evolving regulatory rules using section-level reasoning and reference resolution.
