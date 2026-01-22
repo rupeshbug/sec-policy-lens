@@ -61,13 +61,6 @@ def extract_pdf(pdf_config):
 
             toc_flag = is_toc_candidate(text, page_number)
 
-            if page_number % 10 == 0 or toc_flag:
-                print(
-                    f"  Page {page_number:>4} | "
-                    f"chars={len(text):>6} | "
-                    f"TOC_candidate={toc_flag}"
-                )
-
             pages_output.append(
                 {
                     "page_number": page_number,
