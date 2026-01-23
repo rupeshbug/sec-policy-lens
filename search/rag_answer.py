@@ -169,7 +169,7 @@ def answer_query(
 # testing
 if __name__ == "__main__":
     query = (
-        "Why does the SEC believe additional climate-related disclosure requirements are necessary for investors?"
+        "What are the specific changes in the 2024 version from previous one in 2022?"
     )
 
     response = answer_query(query)
