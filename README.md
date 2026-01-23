@@ -49,3 +49,22 @@ This allows ReguLens to support:
 - LLM: Groq‑hosted `llama‑3.3‑70b‑versatile`
 
 ---
+
+## Retrieval Ablation and Validation
+
+ReguLens includes a simple but effective ablation test to validate metadata-aware retrieval and version control.
+
+The same regulatory question is executed under three retrieval settings:
+
+1. No version filter (mixed retrieval)
+2. Retrieval restricted to the 2024 Final Rule
+3. Retrieval restricted to the 2022 Proposed Rule
+
+Results show that:
+
+- Unfiltered retrieval produces blended answers drawing from both rule versions
+- Version-filtered retrieval strictly limits sources and generated answers to the selected rule
+- The 2024-only response reflects finalized regulatory intent
+- The 2022-only response captures proposal-stage rationale and investor protection arguments
+
+This confirms that document metadata (version, section) is actively used during retrieval and materially affects downstream generation, validating ReguLens’ version-aware RAG design.
