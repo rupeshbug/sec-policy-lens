@@ -68,3 +68,18 @@ Results show that:
 - The 2022-only response captures proposal-stage rationale and investor protection arguments
 
 This confirms that document metadata (version, section) is actively used during retrieval and materially affects downstream generation, validating ReguLens’ version-aware RAG design.
+
+### Query Decomposition Ablation
+
+ReguLens also evaluates the impact of query decomposition on retrieval quality.
+
+The same regulatory question is executed with:
+- Query decomposition disabled (single query)
+- Query decomposition enabled (LLM-generated sub-questions)
+
+Observed behavior:
+- Without decomposition, answers may be conservative or incomplete when relevant information is distributed across sections or rule versions
+- With decomposition enabled, ReguLens retrieves a broader but still grounded set of regulatory passages
+- A final global reranking step ensures results remain aligned with the original user intent
+
+This validates that query decomposition improves recall without compromising grounding, while global reranking preserves regulatory precision.

@@ -205,7 +205,7 @@ def answer_query(
 # testing
 if __name__ == "__main__":
     query = (
-        "What are the specific changes in the 2024 version from the previous one?"
+        "What are the specific changes in the 2024 version from the previous one? Answer in a single paragraph."
     )
 
     # response1 = answer_query(query)
