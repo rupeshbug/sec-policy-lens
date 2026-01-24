@@ -179,3 +179,6 @@ To evaluate the effect of metadata filtering on retrieval and answer generation,
 The results show clear behavioral differences across conditions. Without filtering, the system produces a blended response drawing from both the proposed and final rule rationales. When restricted to the 2024 final rule, the answer reflects the SEC’s finalized position, emphasizing investor pricing efficiency, materiality, and final regulatory justifications. When restricted to the 2022 proposed rule, the answer shifts toward consultation-stage reasoning, focusing on inconsistent voluntary disclosures and the need for investor protection through standardized reporting.
 
 In the final run, retrieved sources fully aligned with the specified version constraints, confirming that metadata-aware retrieval is correctly enforced. This demonstrates that retrieval configuration meaningfully influences both evidence selection and model reasoning, validating the effectiveness of version-aware RAG and highlighting the importance of retriever design in regulatory QA systems.
+
+**Note:**
+ReguLens additionally applies a global cross-encoder reranking step after multi-query retrieval to ensure that the final context is optimized for the original user intent, not individual sub-questions.
