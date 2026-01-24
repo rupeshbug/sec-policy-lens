@@ -1,6 +1,9 @@
 from typing import List
 from groq import Groq
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 DECOMPOSITION_SYSTEM_PROMPT = """

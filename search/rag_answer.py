@@ -11,9 +11,12 @@ from groq import Groq
 
 from search.hybrid_search import hybrid_search
 from search.query_decomposition import QueryDecomposer
+from search.global_rerank import global_rerank
 
+from dotenv import load_dotenv
 
-load_dotenv()
+decomposer = QueryDecomposer()
+
 
 # model initialization using Groq
 client = Groq(
@@ -49,6 +52,7 @@ SYSTEM_PROMPT = """
     regulatory, or investor-facing analysis.
     - When helpful, you may briefly indicate whether an explanation reflects the
     SEC’s proposed (2022) or final (2024) position, without formal citations.
+    - When the question asks for differences or changes, explicitly compare the 2022 Proposed Rule and the 2024 Final Rule.
 """
 
 
@@ -86,7 +90,6 @@ def build_user_prompt(query: str, contexts: List[Dict]) -> str:
 
     return user_prompt.strip()
 
-decomposer = QueryDecomposer()
 
 # main rag function
 def answer_query(
@@ -94,7 +97,8 @@ def answer_query(
     top_k: int = 10,
     rerank_k: int = 3,
     version_filter: str | None = None,
-    decompose: bool = True
+    decompose: bool = True,
+    global_rerank_enabled: bool = True
 ) -> Dict:
     """
     End-to-end RAG answer generation.
@@ -107,7 +111,7 @@ def answer_query(
         
         queries = decomposer.decompose(query)
 
-    # 2. Run retrieval for each sub-query
+    # run retrieval for each sub-query
     all_results = []
 
     for q in queries:
@@ -133,6 +137,13 @@ def answer_query(
             "answer": "The provided documents do not contain sufficient information to answer this question.",
             "sources": []
         }
+        
+    if global_rerank_enabled and len(results) > 1:
+        results = global_rerank(
+            query=query,          
+            candidates=results,
+            top_k=8              
+        )    
 
     # prepare context for prompt
     contexts = []
@@ -200,8 +211,8 @@ if __name__ == "__main__":
     # response1 = answer_query(query)
     # response2 = answer_query(query, version_filter="2024_final")
     # response3 = answer_query(query, version_filter="2022_proposed")
-    response1 = answer_query(query, decompose=False)
-    response2 = answer_query(query, decompose=True)
+    response1 = answer_query(query, decompose=False, global_rerank_enabled=False)
+    response2 = answer_query(query, decompose=True, global_rerank_enabled=True)
 
     print("\n[ANSWER 1]\n")
     print(response1["answer"])
