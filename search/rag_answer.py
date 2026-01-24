@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from groq import Groq
 
 from search.hybrid_search import hybrid_search
+from search.query_decomposition import QueryDecomposer
+
 
 load_dotenv()
 
@@ -80,30 +82,51 @@ def build_user_prompt(query: str, contexts: List[Dict]) -> str:
         {context_str}
 
         Answer:
-"""
+    """
 
     return user_prompt.strip()
 
+decomposer = QueryDecomposer()
 
 # main rag function
 def answer_query(
     query: str,
     top_k: int = 10,
     rerank_k: int = 3,
-    version_filter: str | None = None
+    version_filter: str | None = None,
+    decompose: bool = True
 ) -> Dict:
     """
     End-to-end RAG answer generation.
     """
+    
+    # decompose query
+    queries = [query]
 
-    # 1. hybrid retrieval + reranking
-    results = hybrid_search(
-        query = query,
-        top_k = top_k,
-        rerank_k = rerank_k,
-        return_payload = True,
-        version_filter=version_filter
-    )
+    if decompose:
+        
+        queries = decomposer.decompose(query)
+
+    # 2. Run retrieval for each sub-query
+    all_results = []
+
+    for q in queries:
+        retrieved = hybrid_search(
+            query=q,
+            top_k=top_k,
+            rerank_k=rerank_k,
+            return_payload=True,
+            version_filter=version_filter
+        )
+        all_results.extend(retrieved)
+
+    # deduplicate by point id
+    seen_ids = set()
+    results = []
+    for r in all_results:
+        if r.id not in seen_ids:
+            seen_ids.add(r.id)
+            results.append(r)
 
     if not results:
         return {
@@ -171,12 +194,14 @@ def answer_query(
 # testing
 if __name__ == "__main__":
     query = (
-        "Why does the SEC believe climate-related disclosure is necessary for investors?"
+        "What are the specific changes in the 2024 version from the previous one?"
     )
 
-    response1 = answer_query(query)
-    response2 = answer_query(query, version_filter="2024_final")
-    response3 = answer_query(query, version_filter="2022_proposed")
+    # response1 = answer_query(query)
+    # response2 = answer_query(query, version_filter="2024_final")
+    # response3 = answer_query(query, version_filter="2022_proposed")
+    response1 = answer_query(query, decompose=False)
+    response2 = answer_query(query, decompose=True)
 
     print("\n[ANSWER 1]\n")
     print(response1["answer"])
@@ -192,12 +217,5 @@ if __name__ == "__main__":
     for s2 in response2["sources"]:
         print(
             f"- {s2['doc']} ({s2['version']}) | Section: {s2['section']}"
-        )
-        
-    print("\n[ANSWER 3]\n")
-    print(response3["answer"])
-    for s3 in response3["sources"]:
-        print(
-            f"- {s3['doc']} ({s3['version']}) | Section: {s3['section']}"
-        )    
+        )   
     
