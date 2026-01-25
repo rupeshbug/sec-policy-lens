@@ -15,7 +15,7 @@ def answer_regulatory_question(query: str) -> Dict:
     """
 
     return answer_query(
-        query=query,
-        decompose=True,
-        global_rerank_enabled=True
+        query = query,
+        decompose =True,
+        global_rerank_enabled = True
     )
