@@ -40,7 +40,7 @@ def fast_dense_search(
         using="dense",
         limit=top_k,
         with_payload=True,
-        filter=qdrant_filter,
+        query_filter=qdrant_filter,
     )
 
     return response.points

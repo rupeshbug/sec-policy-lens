@@ -14,6 +14,7 @@ app = FastAPI(
 class DisclosureRequest(BaseModel):
     query: str
     version: Optional[str] = None  # "2024_final" | "2022_proposed"
+    mode: Optional[str] = "fast"
 
 
 @app.post("/disclosure-analysis")
@@ -23,7 +24,8 @@ def disclosure_analysis(req: DisclosureRequest):
     """
     return answer_regulatory_question(
         query = req.query,
-        version = req.version
+        version = req.version,
+        mode = req.mode
     )
     
 @app.get("/health")
