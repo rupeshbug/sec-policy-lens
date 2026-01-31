@@ -1,5 +1,6 @@
 from qdrant_client.models import Filter, FieldCondition, MatchValue
-from search.runtime import get_dense_model, get_qdrant
+from search.runtime import get_qdrant
+from search.remote_embeddings import embed_query
 
 COLLECTION_NAME = "regulens"
 TOP_K = 5
@@ -14,8 +15,7 @@ def fast_dense_search(
     Latency-optimized dense-only retrieval.
     No SPLADE, no reranking.
     """
-
-    model = get_dense_model()
+    
     client = get_qdrant()
 
     qdrant_filter = None
@@ -29,10 +29,7 @@ def fast_dense_search(
             ]
         )
 
-    query_vector = model.encode(
-        query,
-        normalize_embeddings=True
-    ).tolist()
+    query_vector = embed_query(query)
 
     response = client.query_points(
         collection_name=COLLECTION_NAME,
