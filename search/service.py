@@ -1,7 +1,4 @@
 from typing import Dict
-from search.rag_answer import answer_query
-from search.rag_answer_fast import answer_query_fast
-
 
 def answer_regulatory_question(
     query: str,
@@ -21,14 +18,16 @@ def answer_regulatory_question(
     """
 
     if mode == "full":
+        from search.rag_answer import answer_query
         return answer_query(
             query=query,
             version_filter=version,
             decompose=True,
-            global_rerank_enabled=True
+            global_rerank_enabled=True,
         )
 
+    from search.rag_answer_fast import answer_query_fast
     return answer_query_fast(
         query=query,
-        version_filter=version
+        version_filter=version,
     )

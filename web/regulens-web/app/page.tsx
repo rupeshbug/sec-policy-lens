@@ -141,7 +141,7 @@ export default function Home() {
                         : "bg-gradient-to-br from-cyan-500 to-blue-500 text-white"
                     }`}
                   >
-                    {msg.role === "user" ? "U" : "AI"}
+                    {msg.role === "user" ? "You" : "AI"}
                   </div>
                   <p className="whitespace-pre-wrap text-gray-200 leading-relaxed flex-1 pt-1">
                     {msg.content}
