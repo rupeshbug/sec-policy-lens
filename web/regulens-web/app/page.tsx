@@ -1,65 +1,237 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+
+type Source = {
+  doc: string;
+  version: string;
+  section: string;
+};
+
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  sources?: Source[];
+};
+
+const EXAMPLE_QUESTIONS = [
+  "Why did the SEC introduce climate-related disclosure requirements?",
+  "What changed between the 2022 proposed rule and the 2024 final rule?",
+  "Are companies required to disclose Scope 3 emissions?",
+];
 
 export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
+
+  async function sendMessage(query: string) {
+    if (!query.trim()) return;
+
+    setMessages((prev) => [...prev, { role: "user", content: query }]);
+
+    setLoading(true);
+    setInput("");
+
+    try {
+      const res = await fetch(
+        "https://regulens-hekl.onrender.com/disclosure-analysis",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query,
+            version,
+            mode: "fast",
+          }),
+        },
+      );
+
+      const data = await res.json();
+      console.log(data);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data.answer,
+          sources: data.sources || [],
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "An error occurred while retrieving the answer. Please try again.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-[#0F0F0F] text-gray-100">
+      <div className="max-w-4xl my-12 mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-3 text-white bg-clip-text text-center">
+            ReguLens
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-gray-300 text-xl text-center">
+            Regulatory Q&A grounded in official SEC climate disclosure rules
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Controls */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Document Version
+          </label>
+          <select
+            className="bg-[#1A1A1A] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-[#222222] transition-colors w-full sm:w-auto"
+            value={version ?? ""}
+            onChange={(e) => setVersion(e.target.value || null)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <option value="">All versions (prefer final rule)</option>
+            <option value="2024_final">2024 Final Rule</option>
+            <option value="2022_proposed">2022 Proposed Rule</option>
+          </select>
         </div>
-      </main>
-    </div>
+
+        {/* Example Questions */}
+        {messages.length === 0 && (
+          <div className="mb-8 bg-[#1A1A1A] rounded-xl p-6 border border-gray-800">
+            <p className="text-sm font-medium text-gray-300 mb-3">
+              Try asking:
+            </p>
+            <div className="flex flex-col gap-2">
+              {EXAMPLE_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => sendMessage(q)}
+                  className="text-sm text-left bg-[#262626] hover:bg-[#2E2E2E] border border-gray-700 rounded-lg px-4 py-3 text-gray-200 transition-all hover:border-blue-500/50 cursor-pointer"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Chat Messages */}
+        <div className="space-y-4 mb-6 min-h-[200px]">
+          {messages.map((msg, i) => (
+            <div key={i} className="animate-fadeIn">
+              <div
+                className={`rounded-xl p-4 ${
+                  msg.role === "user"
+                    ? "bg-blue-600/15 border border-blue-500/20 ml-8"
+                    : "bg-[#1A1A1A] border border-gray-800 mr-8"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                      msg.role === "user"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gradient-to-br from-cyan-500 to-blue-500 text-white"
+                    }`}
+                  >
+                    {msg.role === "user" ? "U" : "AI"}
+                  </div>
+                  <p className="whitespace-pre-wrap text-gray-200 leading-relaxed flex-1 pt-1">
+                    {msg.content}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sources */}
+              {msg.sources && msg.sources.length > 0 && (
+                <div className="mt-3 ml-11 mr-8 bg-[#141414] rounded-lg p-4 border border-gray-800">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    Sources
+                  </p>
+                  <ul className="space-y-2">
+                    {msg.sources.map((s, idx) => (
+                      <li
+                        key={idx}
+                        className="text-sm text-gray-400 flex items-start gap-2"
+                      >
+                        <span className="text-cyan-400 flex-shrink-0">→</span>
+                        <span>
+                          <span className="text-gray-300 font-medium">
+                            {s.doc}
+                          </span>{" "}
+                          <span className="text-gray-500">({s.version})</span>{" "}
+                          <span className="text-gray-400">
+                            — Section {s.section}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex items-center gap-3 text-gray-400 ml-11">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+              </div>
+              <p className="text-sm">Analyzing regulatory context…</p>
+            </div>
+          )}
+        </div>
+
+        {/* Input Form */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage(input);
+          }}
+          className="sticky bottom-4 bg-[#1A1A1A]/98 backdrop-blur-sm border border-gray-700 rounded-xl p-2 shadow-2xl"
+        >
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask a question about SEC climate disclosure rules…"
+              className="flex-1 bg-transparent px-4 py-3 text-gray-200 placeholder-gray-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-white text-black font-semibold px-5 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-lg hover:shadow-blue-500/25"
+            >
+              {loading ? "Sending..." : "Ask"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
+    </main>
   );
 }
