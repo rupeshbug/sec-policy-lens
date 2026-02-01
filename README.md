@@ -10,6 +10,15 @@ The system prioritizes accuracy, traceability, and compliance-safe reasoning, wi
 
 ---
 
+## Live Demo
+
+**Web App**: https://sec-policy-lens.vercel.app/  
+
+> Note: The live deployment uses the fast retrieval path optimized for latency and free-tier infrastructure of Render.  
+> Full hybrid retrieval is available in offline / evaluation mode.
+
+---
+
 ## What SECPolicyLens Does
 
 - Retrieves relevant regulatory passages using **metadata-aware vector search**
