@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type Source = {
   doc: string;
@@ -26,11 +26,17 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
 
+  // auto-scroll anchor
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
   async function sendMessage(query: string) {
     if (!query.trim()) return;
 
     setMessages((prev) => [...prev, { role: "user", content: query }]);
-
     setLoading(true);
     setInput("");
 
@@ -49,7 +55,6 @@ export default function Home() {
       );
 
       const data = await res.json();
-      console.log(data);
 
       setMessages((prev) => [
         ...prev,
@@ -60,6 +65,8 @@ export default function Home() {
         },
       ]);
     } catch (err) {
+      console.error("Disclosure analysis failed:", err);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -78,8 +85,8 @@ export default function Home() {
       <div className="max-w-4xl my-12 mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-3 text-white bg-clip-text text-center">
-            ReguLens
+          <h1 className="text-4xl font-bold mb-3 text-white text-center">
+            SECPolicyLens
           </h1>
           <p className="text-gray-300 text-xl text-center">
             Regulatory Q&A grounded in official SEC climate disclosure rules
@@ -182,13 +189,16 @@ export default function Home() {
           {loading && (
             <div className="flex items-center gap-3 text-gray-400 ml-11">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
               </div>
               <p className="text-sm">Analyzing regulatory context…</p>
             </div>
           )}
+
+          {/* 👇 Auto-scroll anchor */}
+          <div ref={bottomRef} />
         </div>
 
         {/* Input Form */}
